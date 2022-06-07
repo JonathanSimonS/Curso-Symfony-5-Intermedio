@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tarea{% endblock %}
+
+{% block body %}
+    <h1>Tarea</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ tarea.id }}</td>
+            </tr>
+            <tr>
+                <th>Descripcion</th>
+                <td>{{ tarea.descripcion }}</td>
+            </tr>
+            
+        </tbody>
+    </table>
+    <button class="btn btn-light">    
+        <a class="text-dark" href="{{ path('app_tarea_index') }}"><i class="bi-arrow-left"></i></a>
+    </button>
+
+    <button class="btn btn-light">    
+        <a class="text-dark" href="{{ path('app_tarea_edit', {'id': tarea.id}) }}"><i class="bi-pencil"></i></a>
+    </button>
+
+    {{ include('tarea/_delete_form.html.twig') }}
+{% endblock %}

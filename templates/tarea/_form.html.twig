@@ -1,0 +1,9 @@
+{# la validación por defecto será por html #}
+{# con {'attr':{'novalidate':'novalidate'}} los mensajes se muestran a traves de twig #}
+
+{{ form_start(form, {'attr':{'novalidate':'novalidate'}}) }}
+    
+    {# form_widget pinta cada campo no pintado aún #}
+    {{ form_widget(form) }}
+    <button class="btn btn-primary mt-3">{{ button_label|default('Guardar') }}</button>
+{{ form_end(form) }}

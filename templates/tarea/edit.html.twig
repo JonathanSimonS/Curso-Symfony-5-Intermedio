@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Tarea{% endblock %}
+
+{% block body %}
+    <h1>Editar Tarea</h1>
+
+    {{ include('tarea/_form.html.twig', {'button_label': 'Actualizar'}) }}
+    
+    <button class="btn btn-light">    
+        <a class="text-dark" href="{{ path('app_tarea_index') }}"><i class="bi-arrow-left"></i></a>
+    </button>
+
+    {{ include('tarea/_delete_form.html.twig') }}
+{% endblock %}

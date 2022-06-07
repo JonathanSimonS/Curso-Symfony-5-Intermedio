@@ -3,244 +3,79 @@
 namespace App\Controller;
 
 use App\Entity\Tarea;
+use App\Form\TareaType;
 use App\Repository\TareaRepository;
-use App\Service\TareaManager;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+#[Route('/tarea')]
 class TareaController extends AbstractController
 {
-
-    // #[Route('/tarea', name: 'app_tarea')]
-    // public function index(): Response
-    // {
-    //     return $this->render('tarea/index.html.twig', [
-    //         'controller_name' => 'TareaController',
-    //     ]);
-    // }
-
-    // CREO LA FUNCION PARA LISTAR
-    #[Route('/', name: 'app_listado_tarea')]
-    public function listado(TareaRepository  $tareaRepository): Response
+    #[Route('/', name: 'app_tarea_index', methods: ['GET'])]
+    public function index(TareaRepository $tareaRepository): Response
     {
-        $tareas = $tareaRepository->findAll();      // obtenemos las tareas
-        return $this->render('tarea/listado.html.twig', [
-            'tareas' => $tareas,
+        return $this->render('tarea/index.html.twig', [
+            'tareas' => $tareaRepository->findAll(),
         ]);
     }
 
-    // CREO LA FUNCION CREAR
-    /**
-     * @Route("/crear-tarea", name="app_crear_tarea")
-     */
-    public function crear(Request $request, ManagerRegistry $doctrine,): Response
+    #[Route('/new', name: 'app_tarea_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, TareaRepository $tareaRepository): Response
     {
-
-        $descripcion = $request->request->get('descripcion', null);
         $tarea = new Tarea();
-        if (null !== $descripcion) {
-            if (!empty($descripcion)) {
-                $em = $doctrine->getManager(); //entityManager
-                $tarea->setDescripcion($descripcion);
-                $em->persist($tarea);
-                $em->flush();
-                $this->addFlash(
-                    'success',
-                    'Tarea creada correctamente!'
-                );
-                return $this->redirectToRoute('app_listado_tarea');
-            } else {
-                $this->addFlash(
-                    'warning',
-                    'El campo "Descripción es obligatorio"'
-                );
-            }
-        }
-        return $this->render('tarea/crear.html.twig', [
-            "tarea" => $tarea,
-        ]);
-    }
-
-    // CREO LA FUNCION EDITAR
-    #[Route('/tarea/editar/{id}', name: 'app_editar_tarea')]
-    // en los parámetros indicar primero los nuestros (apreciación)
-    // editando una entidad, por lo que la debemos recoger con TareaRepository
-    public function editar(int $id, TareaRepository $tareaRepository, Request $request, ManagerRegistry $doctrine, ValidatorInterface $validator): Response
-    {
-
-        // busca por nombre y precio(uno)
-        //$tarea = $tareaRepository->findOneBy(['name' => 'Keyboard','price' => 1999,]);
-
-        // busca variosque coincidan con el nombre, ordenados por precio
-        //$tarea = $tareaRepository->findBy(['name' => 'Keyboard'],['price' => 'ASC']);
+        $form = $this->createForm(TareaType::class, $tarea);
         
-        $tarea = $tareaRepository->find($id);
+        // Matcheo entre el formulario y la peticion, los une con la tarea 
+        // y queda el formulario con los valores enviados
+        $form->handleRequest($request);
 
-        // si no se encuentra lanzamos excepcion
-        if (null === $tarea) {
-            throw $this->createNotFoundException();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $tareaRepository->add($tarea, true);
+
+            return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        // obtenemos la descripcion mediante request | query si fuese GET ($request->query->get('descripcion');)
-        $descripcion = $request->request->get('descripcion', null); // si no existe devuelve null        
-
-        if (null !== $descripcion) {
-            if (!empty($descripcion)) {
-
-                //obtiene el objeto administrador de entidades de Doctrine, que es el objeto más importante de Doctrine.
-                //responsable de guardar y recuperar objetos de la base de datos.
-                $em = $doctrine->getManager(); //entityManager
-
-                $tarea->setDescripcion($descripcion);
-
-                // ejecuta un INSERT
-                $em->flush();
-
-                // mensaje flash
-                $this->addFlash('success','¡Tarea editada correctamente!' );
-
-                // finamente la redirijo al listado
-                return $this->redirectToRoute('app_listado_tarea');
-
-            }else {
-                // mensaje flash
-                $this->addFlash(
-                    'warning',
-                    'El campo "Descripción" es obligatorio'
-                );
-            }
-        }
-
-        $errors = $validator->validate($tarea);
-        if (count($errors) > 0) {
-            return new Response((string) $errors, 400);
-        }
-
-        return $this->render('tarea/editar.html.twig', [
-            "tarea" => $tarea,
+        return $this->renderForm('tarea/new.html.twig', [
+            'tarea' => $tarea,
+            'form' => $form,
         ]);
     }
 
-    // CREO LA FUNCION ELIMINAR
-    /**
-     * @Route(
-     * "/tarea/eliminar/{id}", 
-     * name="app_eliminar_tarea", 
-     * requirements={"id"="\d+"}
-     * )
-     */
-    public function eliminar(Tarea $tarea,ManagerRegistry $doctrine): Response
+    #[Route('/{id}', name: 'app_tarea_show', methods: ['GET'])]
+    public function show(Tarea $tarea): Response
     {
-        $em = $doctrine->getManager(); //entityManager
-        $em -> remove($tarea);
-        $em ->flush(); // para que se ejcute en bbdd
-        $this->addFlash(
-            'danger',
-            '¡Tarea eliminada correctamente!'
-        );
-        // solo redirigimos
-        return $this->redirectToRoute('app_listado_tarea');
-    }
-
-    //************ SERVICIOS  ************//
-    
-    /**
-     * @Route("/crear-tarea-servicio", name="app_crear_tarea_servicio")
-     */
-    public function crearServicio(TareaManager $tareaManager, Request $request): Response
-    {
-        $descripcion = $request->request->get('descripcion', null);
-        $tarea = new Tarea();
-        if (null !== $descripcion) {
-            $tarea->setDescripcion($descripcion);
-            $errores = $tareaManager->validar($tarea);
-
-            // if (empty($errores)) no funcionaría porque no estaría vacío
-            if (0 === count($errores)) {
-                $tareaManager->crear($tarea);
-                $this->addFlash(
-                    'success',
-                    'Tarea creada correctamente!'
-                );
-                return $this->redirectToRoute('app_listado_tarea');
-            } else {
-                foreach ($errores as $error) {
-                    $this->addFlash(
-                        'warning',
-                        $error->getMessage()
-                    );
-                }
-            }
-        }
-        return $this->render('tarea/crear.html.twig', [
-            "tarea" => $tarea,
+        return $this->render('tarea/show.html.twig', [
+            'tarea' => $tarea,
         ]);
     }
 
-
-    /**
-     * @Route(
-     * "/tarea/editar-servicio/{id}", 
-     * name="app_editar_tarea_servicio", 
-     * requirements={"id"="\d+"}
-     * )
-     */
-    
-    // en los parámetros indicar primero los nuestros (apreciación)
-    // editando una entidad, por lo que la debemos recoger con TareaRepository
-
-    // FORMA RECOMENDADA
-    // automáticamente nos busca la tarea con id idéntica, sin pasarselo por parámetro
-    public function editarConParamsConvertServicio(TareaManager $tareaManager, Tarea $tarea, Request $request): Response
+    #[Route('/{id}/edit', name: 'app_tarea_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Tarea $tarea, TareaRepository $tareaRepository): Response
     {
+        $form = $this->createForm(TareaType::class, $tarea);
+        $form->handleRequest($request);
 
-        $descripcion = $request->request->get('descripcion', null);
-        if (null !== $descripcion) {
-            $tarea->setDescripcion($descripcion);
-            $errores = $tareaManager->validar($tarea);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $tareaRepository->add($tarea, true);
 
-            if (0 === count($errores)) {
-                $tareaManager->crear($tarea);
-                $this->addFlash(
-                    'success',
-                    'Tarea editada correctamente!'
-                );
-                return $this->redirectToRoute('app_listado_tarea');
-            } else {
-                foreach ($errores as $error) {
-                    $this->addFlash(
-                        'warning',
-                        $error->getMessage()
-                    );
-                }
-            }
+            return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
         }
-        return $this->render('tarea/editar.html.twig', [
-            "tarea" => $tarea,
+
+        return $this->renderForm('tarea/edit.html.twig', [
+            'tarea' => $tarea,
+            'form' => $form,
         ]);
     }
 
-    // CREO LA FUNCION ELIMINAR CON SERVICIO USANDO TAREAMANAGER
-    /**
-     * @Route(
-     * "/tarea-eliminar-servicio/{id}", 
-     * name="app_eliminar_tarea_servicio", 
-     * requirements={"id"="\d+"}
-     * )
-     */
-    public function eliminarServicio(Tarea $tarea,TareaManager $tareaManager): Response
+    #[Route('/{id}', name: 'app_tarea_delete', methods: ['POST'])]
+    public function delete(Request $request, Tarea $tarea, TareaRepository $tareaRepository): Response
     {
-        $tareaManager->eliminar($tarea);
-        $this->addFlash(
-            'danger',
-            '¡Tarea eliminada correctamente!'
-        );
-        // solo redirigimos
-        return $this->redirectToRoute('app_listado_tarea');
-    }
+        if ($this->isCsrfTokenValid('delete'.$tarea->getId(), $request->request->get('_token'))) {
+            $tareaRepository->remove($tarea, true);
+        }
 
+        return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
+    }
 }
