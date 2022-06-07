@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Tarea;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,6 +22,25 @@ class TareaRepository extends ServiceEntityRepository
         parent::__construct($registry, Tarea::class);
     }
 
+    // creamos métodos para la paginación en el repositorio
+    // dql ---> nombre que reciben las query en doctrine, 
+    public function paginacion($dql, $pagina, $elementosPorPagina)
+    {
+        $paginador = new Paginator($dql);
+        $paginador->getQuery()
+        ->setFirstResult($elementosPorPagina * ($pagina-1)) //10*(1-1)= 0, primer registro a mostrar sería el 0
+        ->setMaxResults($elementosPorPagina);
+        return $paginador;
+    }
+    public function buscarTodas($pagina=1,$elementosPorPagina=5)
+    {
+        $query =  $this->createQueryBuilder('t')
+           ->getQuery()
+        ;
+        return $this->paginacion($query, $pagina, $elementosPorPagina);
+    }
+
+    
     public function add(Tarea $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
