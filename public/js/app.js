@@ -6,8 +6,7 @@ $('.finalizar').on('click', function (e) {
     textoContrario = $this.data('texto');
     textoActual = $this.text();
 
-    $this.addClass('disabled');
-    $descripcion.addClass('tachado');
+    $this.addClass('disabled');    
 
     $.post(url, {})
         .done(function (respuesta) {
@@ -18,7 +17,6 @@ $('.finalizar').on('click', function (e) {
                 $descripcion.removeClass('tachado');
                 $descripcion.html($descripcion.text());
             }
-            console.log($descripcion);
 
             $this.text(textoContrario);
             $this.data('texto', textoActual);

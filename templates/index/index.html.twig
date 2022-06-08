@@ -8,11 +8,12 @@
   
   <table class="table table-striped">
     <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Descripción</th>
-        <th scope="col">Acciones</th>
-      </tr>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Creado en</th>
+            <th scope="col">Acciones</th>
+        </tr>
     </thead>
     <tbody>
       {% for index, tarea in tareas %}
@@ -24,6 +25,9 @@
                  {% else %} 
                     {{ tarea.descripcion }}
                  {% endif %} 
+          </td>
+          <td>
+              {{ tarea.creadoEn|date("d/m/Y") }}
           </td>
           <td>
             <a href="{{path('app_tarea_edit',{ id: tarea.id})}}">editar</a>
