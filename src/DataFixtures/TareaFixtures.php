@@ -6,15 +6,17 @@ use App\Entity\Tarea;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
-class TareaFixture extends Fixture
+class TareaFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
         
         // generar listado de tareas
-        for ($i=1; $i = 24; $i++) { 
+        for ($i=0; $i < 20; $i++) { 
             $tarea=new Tarea();
             $tarea->setDescripcion("Tarea de prueba - $i");
+            $tarea->setFinalizada(0);
+            
             $manager->persist($tarea);    
         }
 

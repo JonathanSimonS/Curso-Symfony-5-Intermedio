@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Tarea;
 use App\Form\TareaType;
 use App\Repository\TareaRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/tarea')]
 class TareaController extends AbstractController
 {
-    #[Route('/', name: 'app_tarea_index', methods: ['GET'])]
+    #[Route('/listado', name: 'app_tarea_index', methods: ['GET'])]
     public function index(TareaRepository $tareaRepository): Response
     {
         return $this->render('tarea/index.html.twig', [
@@ -21,7 +22,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_tarea_new', methods: ['GET', 'POST'])]
+    #[Route('/nueva', name: 'app_tarea_new', methods: ['GET', 'POST'])]
     public function new(Request $request, TareaRepository $tareaRepository): Response
     {
         $tarea = new Tarea();
@@ -34,7 +35,7 @@ class TareaController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $tareaRepository->add($tarea, true);
 
-            return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_listado_tarea', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('tarea/new.html.twig', [
@@ -51,7 +52,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_tarea_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/editar', name: 'app_tarea_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Tarea $tarea, TareaRepository $tareaRepository): Response
     {
         $form = $this->createForm(TareaType::class, $tarea);
@@ -60,7 +61,7 @@ class TareaController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $tareaRepository->add($tarea, true);
 
-            return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_listado_tarea', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('tarea/edit.html.twig', [
@@ -76,6 +77,22 @@ class TareaController extends AbstractController
             $tareaRepository->remove($tarea, true);
         }
 
-        return $this->redirectToRoute('app_tarea_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_listado_tarea', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/tarea/{id}', name: 'finalizar_tarea', methods: ['POST'])]
+    public function finalizar(Tarea $tarea, Request $request, ManagerRegistry $doctrine): Response
+    {
+        // validamos que la petición sea por AJAX
+        if ($request->isXmlHttpRequest()) {
+            $em    = $doctrine->getManager();
+            $tarea->setFinalizada(!$tarea->getFinalizada());
+            $em->flush();
+            return $this->json([
+                'finalizada' => $tarea->getFinalizada()
+            ]);
+        }
+        // todas las devoluciones en controller son de tipo Response
+        throw $this->createNotFoundException(); 
     }
 }

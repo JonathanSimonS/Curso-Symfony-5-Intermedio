@@ -16,7 +16,7 @@ class IndexController extends AbstractController
      * propiedad defaults, le da el valor por defecto a la página enrutada
      * 
      * @Route("/{pagina}", 
-     *      name="index",
+     *      name="app_listado_tarea",
      *      defaults={"pagina":1}, 
      *      requirements={"pagina"="\d+"},
      *      methods={"GET"} )
