@@ -27,7 +27,8 @@
                  {% endif %} 
           </td>
           <td>
-              {{ tarea.creadoEn|date("d/m/Y") }}
+              {# Aqui recibe el filtro de TiepoExtension  #}
+              {{ tarea.creadoEn|tiempo }}
           </td>
           <td>
             <a href="{{path('app_tarea_edit',{ id: tarea.id})}}">editar</a>
