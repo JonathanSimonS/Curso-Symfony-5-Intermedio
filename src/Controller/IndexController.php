@@ -24,7 +24,8 @@ class IndexController extends AbstractController
     public function index(int $pagina,TareaRepository $tareasRepository)
     {
         // ver variable página ---> dump($pagina,);
-
+        
+        $this->denyAccessUnlessGranted('ROLE_USER');
         return $this->render('index/index.html.twig', [
             'tareas' => $tareasRepository->buscarTodas($pagina, self::ELEMENTOS_POR_PAGINA),
             'pagina' => $pagina,
